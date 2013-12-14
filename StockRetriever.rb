@@ -1,4 +1,8 @@
+# -*- coding: gb2312 -*-
 require "open-uri"
+require 'csv'
+require 'nkf'
+
 require './Stock.rb'
 
 class StockRetriever
@@ -69,17 +73,17 @@ class StockRetriever
             if data = /<div\ align="center">([\d\.]*)<\/div><\/td>/.match( line ) then
               case index
               when 0
-                s.begin_price = data
+                s.begin_price = data[1]
               when 1
-                s.max_price = data
+                s.max_price = data[1]
               when 2
-                s.end_price = data
+                s.end_price = data[1]
               when 3
-                s.min_price = data
+                s.min_price = data[1]
               when 4
-                s.trade_amount = data
+                s.trade_amount = data[1]
               when 5 
-                s.trade_price = data
+                s.trade_price = data[1]
                 tempStocks.insert( 0 ,  s )
                 
                 #reset the variable
@@ -105,7 +109,15 @@ end
 
 stockRetriver = StockRetriever.new( "600000")
 stockRetriver.retrieve()
-for stock in stockRetriver.stocks
-  puts stock.inspect
+
+file_name = ["date" , "begin_price" , "max_price" , "end_price" , "min_price" , "trade_amount" , "trade_price" ] 
+output = CSV.generate do |csv|
+  csv << file_name
+  for stock in stockRetriver.stocks
+    csv << stock.to_list
+  end
 end
 
+fh = File.new("test.csv" , "wb")
+fh.puts NKF.nkf("-wl" , output  )
+fh.close 
