@@ -17,11 +17,12 @@ class StockRetriever
   end
 
   def retrieve( )
-
+    
     # Get the years 
     file = open( @address )do |file|
       while line = file.gets
-
+        
+        # get the name
         if line.match("<select\ name=\"year\">" )  then
           @yearstart = true 
         end
@@ -103,21 +104,41 @@ class StockRetriever
 
   def stocks()
     @stocks
-  end
-  
+  end  
 end
 
-stockRetriver = StockRetriever.new( "600000")
+def outputArrayToCSV( path , header , data )
+
+  # generate the csv buffer 
+  output = CSV.generate do |csv|
+    csv << header 
+    for stock in data
+      csv << stock.to_list
+    end
+  end
+
+  #wirte to a file 
+  fh = File.new( path  , "wb")
+  fh.puts NKF.nkf("-wl" , output  )
+  fh.close 
+
+end
+
+stockRetriver = StockRetriever.new( "300344")
 stockRetriver.retrieve()
 
-file_name = ["date" , "begin_price" , "max_price" , "end_price" , "min_price" , "trade_amount" , "trade_price" ] 
-output = CSV.generate do |csv|
-  csv << file_name
-  for stock in stockRetriver.stocks
-    csv << stock.to_list
-  end
-end
+puts stockRetriver.stocks.size 
+header = ["date" , "begin_price" , "max_price" , "end_price" , "min_price" , "trade_amount" , "trade_price" ]
+outputArrayToCSV("sz300344.csv" , header , stockRetriver.stocks )
 
-fh = File.new("test.csv" , "wb")
-fh.puts NKF.nkf("-wl" , output  )
-fh.close 
+# file_name = ["date" , "begin_price" , "max_price" , "end_price" , "min_price" , "trade_amount" , "trade_price" ] 
+# output = CSV.generate do |csv|
+#   csv << file_name
+#   for stock in stockRetriver.stoc
+#     csv << stock.to_list
+#   end
+# end
+
+# fh = File.new("test.csv" , "wb")
+# fh.puts NKF.nkf("-wl" , output  )
+# fh.close 
