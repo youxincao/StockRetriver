@@ -2,12 +2,14 @@ require "open-uri"
 require './Stock.rb'
 
 class StockRetriever
+  
   def initialize( code )
     @code = code
     @address = "http://money.finance.sina.com.cn/corp/go.php/vMS_MarketHistory/stockid/" + @code + ".phtml"
+    
     @yearstart = false
     @years = Array.new
-    @stocks = Array.new 
+    @stocks = Array.new
   end
 
   def retrieve( )
@@ -46,25 +48,24 @@ class StockRetriever
 
         s = nil
         index = -1
+        tempStocks = Array.new 
         
         file = open( url ) do | file |
           while line = file.gets
-
-            
             #  parse the date without the link 
             if  /[\d]{4}-[\d]{2}-[\d]{2}.*<\/div><\/td>/.match( line )  then
               s = Stock.new
               s.date = /[\d]{4}-[\d]{2}-[\d]{2}/.match( line )
               index = 0 
             end
-
+            
             # parse the data with a link
             if  /[\d]{4}-[\d]{2}-[\d]{2}.*<\/a>/.match( line )  then
               s = Stock.new
               s.date = /[\d]{4}-[\d]{2}-[\d]{2}/.match( line )
               index = 0 
             end
-
+            
             if data = /<div\ align="center">([\d\.]*)<\/div><\/td>/.match( line ) then
               case index
               when 0
@@ -79,6 +80,7 @@ class StockRetriever
                 s.trade_amount = data
               when 5 
                 s.trade_price = data
+                tempStocks.insert( 0 ,  s )
                 
                 #reset the variable
                 s = nil
@@ -86,14 +88,24 @@ class StockRetriever
               end
               index = index + 1 
             end
-            
           end
+        end
+        for stock in tempStocks
+          @stocks.push( stock )
         end
       end
     end
-    
   end
+
+  def stocks()
+    @stocks
+  end
+  
 end
 
 stockRetriver = StockRetriever.new( "600000")
 stockRetriver.retrieve()
+for stock in stockRetriver.stocks
+  puts stock.inspect
+end
+
