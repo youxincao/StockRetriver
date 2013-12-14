@@ -45,14 +45,22 @@ class StockRetriever
         puts url
 
         s = nil
-        index = 0
+        index = -1
         
         file = open( url ) do | file |
           while line = file.gets
 
-            # the next line is time 
+            
+            #  parse the date without the link 
             if  /[\d]{4}-[\d]{2}-[\d]{2}.*<\/div><\/td>/.match( line )  then
-              s = Stock.new 
+              s = Stock.new
+              s.date = /[\d]{4}-[\d]{2}-[\d]{2}/.match( line )
+              index = 0 
+            end
+
+            # parse the data with a link
+            if  /[\d]{4}-[\d]{2}-[\d]{2}.*<\/a>/.match( line )  then
+              s = Stock.new
               s.date = /[\d]{4}-[\d]{2}-[\d]{2}/.match( line )
               index = 0 
             end
@@ -70,7 +78,11 @@ class StockRetriever
               when 4
                 s.trade_amount = data
               when 5 
-                s.trade_price = data 
+                s.trade_price = data
+                
+                #reset the variable
+                s = nil
+                index = -1
               end
               index = index + 1 
             end
